@@ -14,7 +14,9 @@ const app = express()
 connectDB()
 
 // Middleware
-app.use(cors())
+app.use(cors({
+    origin: 'https://levitation-frontend-3qz8.vercel.app',
+}))
 app.use(express.json())
 
 // Routes
