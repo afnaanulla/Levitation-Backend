@@ -35,7 +35,10 @@ export const generateInvoice = async (req: AuthRequest, res: Response) => {
     });
     
     // Generate PDF
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
     const page = await browser.newPage();
     
     // Create HTML content for the invoice
