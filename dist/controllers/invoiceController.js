@@ -4,8 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generateInvoice = void 0;
-const puppeteer_1 = __importDefault(require("puppeteer"));
+const puppeteer_core_1 = __importDefault(require("puppeteer-core"));
 const Invoice_1 = __importDefault(require("../models/Invoice"));
+const chromium_1 = __importDefault(require("@sparticuz/chromium"));
 const generateInvoice = async (req, res) => {
     try {
         const { products } = req.body;
@@ -33,7 +34,18 @@ const generateInvoice = async (req, res) => {
             grandTotal
         });
         // Generate PDF
-        const browser = await puppeteer_1.default.launch();
+        const isProduction = process.env.NODE_ENV === 'production';
+        // Get executable path (fix for TypeScript error)
+        const executablePath = isProduction
+            ? await chromium_1.default.executablePath()
+            : undefined;
+        const browser = await puppeteer_core_1.default.launch({
+            args: isProduction
+                ? [...chromium_1.default.args, '--no-sandbox', '--disable-setuid-sandbox']
+                : ['--no-sandbox', '--disable-setuid-sandbox'],
+            executablePath,
+            headless: true, // Fixed: use boolean instead of chromium.headless
+        });
         const page = await browser.newPage();
         // Create HTML content for the invoice
         const htmlContent = `
