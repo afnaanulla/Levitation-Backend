@@ -1,7 +1,8 @@
 import { Response } from 'express';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import Invoice from '../models/Invoice';
 import { AuthRequest } from '../middleware/auth';
+import chromium from '@sparticuz/chromium';
 
 export const generateInvoice = async (req: AuthRequest, res: Response) => {
   try {
@@ -35,10 +36,21 @@ export const generateInvoice = async (req: AuthRequest, res: Response) => {
     });
     
     // Generate PDF
+    const isProduction = process.env.NODE_ENV === 'production';
+    
+    // Get executable path (fix for TypeScript error)
+    const executablePath = isProduction 
+      ? await chromium.executablePath()
+      : undefined;
+    
     const browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: isProduction
+        ? [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox']
+        : ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath,
+      headless: true, // Fixed: use boolean instead of chromium.headless
     });
-
+    
     const page = await browser.newPage();
     
     // Create HTML content for the invoice
